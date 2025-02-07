@@ -118,6 +118,7 @@ int main() {
         showMap(map);
         test++;
         sleepglobal(0.2);
+        printf("\e[1;1H\e[2J"); // clear screen
     }
     return 0;
 }
