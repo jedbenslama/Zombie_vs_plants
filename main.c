@@ -117,7 +117,7 @@ int main() {
         createMap(map);
         showMap(map);
         test++;
-        sleepglobal(0.5);
+        sleepglobal(0.2);
     }
     return 0;
 }
