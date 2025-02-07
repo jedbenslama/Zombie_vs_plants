@@ -4,8 +4,8 @@
 #define MAP_X 150
 #define MAP_Y 5
 
-#define ZOMBIE_X 0
-#define ZOMBIE_Y MAP_Y - 1
+#define ZOMBIE_X 0 // zombie X
+#define ZOMBIE_Y MAP_Y - 1 // zombie Y
 
 void createMap(char map[MAP_Y][MAP_X]) {
     for (int i = 0; i < MAP_Y; i++) {
@@ -23,7 +23,7 @@ void showMap(char map[MAP_Y][MAP_X]) {
     for (int i = 0; i < MAP_Y; i++) {
         printf("#");
         for (int j = 0; j < MAP_X; j++) {
-            if (j == ZOMBIE_X && i == ZOMBIE_Y) {
+            if (j == ZOMBIE_X && i == ZOMBIE_Y) { // faire spawn un "d" à (ZOMBIE_X, ZOMBIE_Y)
                 printf("d");
             }
             else {
@@ -32,7 +32,7 @@ void showMap(char map[MAP_Y][MAP_X]) {
         }
         printf("#\n");
     }
-    for (int x = 0; x < MAP_X +2; x ++) {
+    for (int x = 0; x < MAP_X + 2; x++) {
         printf("#");
     }
 }
