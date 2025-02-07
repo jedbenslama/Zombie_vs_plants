@@ -15,7 +15,7 @@
     static void sleepglobal(float tempsdesleep){
         usleep((int)(tempsdesleep*1000000));
     }
-    char getch(void) { // fonction getch car elle n'est pas sur mac (source: chatgpt)
+    char _getch(void) { // fonction getch car elle n'est pas sur mac (source: chatgpt)
         struct termios oldt, newt;
         char ch;
         tcgetattr(STDIN_FILENO, &oldt);
@@ -27,7 +27,7 @@
         return ch;
     }
 
-    int kbhit(void) { // fonction kbhit car elle n'est pas sur mac (source: chatgpt)
+    int _kbhit(void) { // fonction kbhit car elle n'est pas sur mac (source: chatgpt)
         struct termios oldt, newt;
         int ch;
         int oldf;
@@ -97,8 +97,8 @@ void showMap(char map[MAP_Y][MAP_X]) {
 int main() {
     int test=0;
     while(1){
-        if(kbhit()){
-            char new_direction = getch();
+        if(_kbhit()){
+            char new_direction = _getch();
             if(new_direction=='w'){
                 *zombie_y-=1;
             }
