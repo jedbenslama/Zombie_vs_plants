@@ -9,6 +9,7 @@
     static void sleepglobal(float tempsdesleep){
         Sleep((int)(tempsdesleep*1000));
     }
+    #define clrscr() system("cls")
 #else
     #include <termios.h>
     #include <unistd.h>
