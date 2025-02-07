@@ -6,9 +6,15 @@
 
 #ifdef _WIN32
     #include <conio.h>
+    void sleepglobal(float tempsdesleep){
+        sleep(tempsdesleep/1000);
+    }
 #else
     #include <termios.h>
     #include <fcntl.h>
+    void sleepglobal(float tempsdesleep){
+        sleep(tempsdesleep);
+    }
     char getch(void) { // fonction getch car elle n'est pas sur mac (source: chatgpt)
         struct termios oldt, newt;
         char ch;
@@ -84,11 +90,17 @@ void showMap(char map[MAP_Y][MAP_X]) {
     for (int x = 0; x < MAP_X + 2; x++) {
         printf("#");
     }
+    printf("\n");
 }
 
 int main() {
-    char map[MAP_Y][MAP_X];
-    createMap(map);
-    showMap(map);
+    int test=0;
+    while(1){
+        char map[MAP_Y][MAP_X];
+        createMap(map);
+        showMap(map);
+        test++;
+        sleepglobal(1);
+    }
     return 0;
 }
