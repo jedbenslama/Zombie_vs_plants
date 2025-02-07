@@ -5,15 +5,15 @@
 
 #ifdef _WIN32
     #include <conio.h>
-    void sleepglobal(float tempsdesleep){
-        sleep(tempsdesleep/1000);
+    static void sleepglobal(float tempsdesleep){
+        Sleep((int)(tempsdesleep*1000));
     }
 #else
     #include <termios.h>
     #include <unistd.h>
     #include <fcntl.h>
-    void sleepglobal(float tempsdesleep){
-        sleep(tempsdesleep);
+    static void sleepglobal(float tempsdesleep){
+        usleep((int)(tempsdesleep*1000000));
     }
     char getch(void) { // fonction getch car elle n'est pas sur mac (source: chatgpt)
         struct termios oldt, newt;
@@ -71,6 +71,7 @@ void createMap(char map[MAP_Y][MAP_X]) {
 }
 
 void showMap(char map[MAP_Y][MAP_X]) {
+    printf("\n");
     for (int x = 0; x < MAP_X + 2; x ++) {
         printf("#");
     }
@@ -96,11 +97,27 @@ void showMap(char map[MAP_Y][MAP_X]) {
 int main() {
     int test=0;
     while(1){
+        if(kbhit()){
+            char new_direction = getch();
+            if(new_direction=='w'){
+                *zombie_y-=1;
+            }
+            else if (new_direction=='s'){
+                *zombie_y+=1;
+            }
+            else if (new_direction=='d'){
+                *zombie_x+=1;
+            }
+            else if (new_direction=='a'){
+                *zombie_x-=1;
+            }
+            
+        }
         char map[MAP_Y][MAP_X];
         createMap(map);
         showMap(map);
         test++;
-        sleepglobal(1);
+        sleepglobal(0.5);
     }
     return 0;
 }
