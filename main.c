@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 
+
 #ifdef _WIN32
     #include <conio.h>
     static void sleepglobal(float tempsdesleep){
@@ -12,6 +13,9 @@
     #include <termios.h>
     #include <unistd.h>
     #include <fcntl.h>
+
+    #define clrscr() printf("\e[1;1H\e[2J")
+
     static void sleepglobal(float tempsdesleep){
         usleep((int)(tempsdesleep*1000000));
     }
@@ -118,7 +122,7 @@ int main() {
         showMap(map);
         test++;
         sleepglobal(0.2);
-        printf("\e[1;1H\e[2J"); // clear screen
+        clrscr(); // clear screen
     }
     return 0;
 }
