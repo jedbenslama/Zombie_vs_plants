@@ -1,129 +1,120 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define GRAVITY 0.5
+#define JUMP_VELOCITY -10
+#define PLAYER_SPEED 5
+
+#include <SDL.h>
+#include <SDL_image.h>
+#include <stdbool.h>
+#include "objets.h"
 
 
-#ifdef _WIN32
-    #include <conio.h>
-    static void sleepglobal(float tempsdesleep){
-        Sleep((int)(tempsdesleep*1000));
-    }
-    #define clrscr() system("cls")
-#else
-    #include <termios.h>
-    #include <unistd.h>
-    #include <fcntl.h>
-
-    #define clrscr() printf("\e[1;1H\e[2J")
-
-    static void sleepglobal(float tempsdesleep){
-        usleep((int)(tempsdesleep*1000000));
-    }
-    char _getch(void) { // fonction getch car elle n'est pas sur mac (source: chatgpt)
-        struct termios oldt, newt;
-        char ch;
-        tcgetattr(STDIN_FILENO, &oldt);
-        newt = oldt;
-        newt.c_lflag &= ~(ICANON | ECHO);
-        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-        ch = getchar();
-        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-        return ch;
-    }
-
-    int _kbhit(void) { // fonction kbhit car elle n'est pas sur mac (source: chatgpt)
-        struct termios oldt, newt;
-        int ch;
-        int oldf;
-
-        tcgetattr(STDIN_FILENO, &oldt);
-        newt = oldt;
-        newt.c_lflag &= ~(ICANON | ECHO);
-        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-        oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-        fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-
-        ch = getchar();
-
-        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-        fcntl(STDIN_FILENO, F_SETFL, oldf);
-
-        if (ch != EOF) {
-            ungetc(ch, stdin);
-            return 1;
-        }
-
-        return 0;
-    }
-#endif
-
-#define MAP_X 150
-#define MAP_Y 5
-
-int z_x = 0; // zombie X
-int z_y = MAP_Y - 1; // zombie Y
-
-int *zombie_x = &z_x;
-int *zombie_y = &z_y;
-
-void createMap(char map[MAP_Y][MAP_X]) {
-    for (int i = 0; i < MAP_Y; i++) {
-        for (int j = 0; j < MAP_X; j++) {
-            map[i][j] = '_';
-        }
-    }
-}
-
-void showMap(char map[MAP_Y][MAP_X]) {
-    printf("\n");
-    for (int x = 0; x < MAP_X + 2; x ++) {
-        printf("#");
-    }
-    printf("\n");
-    for (int i = 0; i < MAP_Y; i++) {
-        printf("#");
-        for (int j = 0; j < MAP_X; j++) {
-            if (j == *zombie_x && i == *zombie_y) { // faire spawn un "d" à (z_x, z_y)
-                printf("d");
-            }
-            else {
-            printf("%c", map[i][j]);
-            }
-        }
-        printf("#\n");
-    }
-    for (int x = 0; x < MAP_X + 2; x++) {
-        printf("#");
-    }
-    printf("\n");
-}
+typedef struct {
+    SDL_Rect rect;
+    float velY;
+    bool onGround;
+} Player;
 
 int main() {
-    int test=0;
-    while(1){
-        if(_kbhit()){
-            char new_direction = _getch();
-            if(new_direction=='w'){
-                *zombie_y-=1;
-            }
-            else if (new_direction=='s'){
-                *zombie_y+=1;
-            }
-            else if (new_direction=='d'){
-                *zombie_x+=1;
-            }
-            else if (new_direction=='a'){
-                *zombie_x-=1;
-            }
-            
+    SDL_Init(SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+
+    SDL_Window* window = SDL_CreateWindow("Platformer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    SDL_Texture* background = IMG_LoadTexture(renderer, "assets/background.jpg");
+    SDL_Texture* brick = IMG_LoadTexture(renderer, "assets/brick.jpg");
+    SDL_Texture* soltexture = IMG_LoadTexture(renderer, "assets/soltexture.jpg");
+    SDL_Texture* character = IMG_LoadTexture(renderer, "assets/personnage_d.png");
+    
+    // x y largeur hauteur
+
+    SDL_Rect platform = { 500, 400, 200, 50 };
+    SDL_Rect platform2 = { 200, 400, 80, 300 };
+
+    Player player = { .rect = {100, SCREEN_HEIGHT - 200, 50, 50}, .velY = 0, .onGround = false };
+
+    float cameraX = 0;
+
+    bool running = true;
+    SDL_Event event;
+
+    while (running) {
+        if(player.rect.y>2000){
+            exit(123);
         }
-        char map[MAP_Y][MAP_X];
-        createMap(map);
-        showMap(map);
-        test++;
-        sleepglobal(0.2);
-        clrscr(); // clear screen
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                running = false;
+        }
+        const Uint8* keystate = SDL_GetKeyboardState(NULL);
+        if (keystate[SDL_SCANCODE_LEFT]){ player.rect.x -= PLAYER_SPEED; character = IMG_LoadTexture(renderer, "assets/personnage_g.png");}
+        if (keystate[SDL_SCANCODE_RIGHT]){ player.rect.x += PLAYER_SPEED; character = IMG_LoadTexture(renderer, "assets/personnage_d.png");}
+        if ((keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_UP]) && player.onGround) {
+            player.velY = JUMP_VELOCITY;
+            player.onGround = false;
+        }
+        if (keystate[SDL_SCANCODE_G]){ platform.x+=10;}
+        if (keystate[SDL_SCANCODE_F]){ platform.x-=10;}
+        if (keystate[SDL_SCANCODE_R]){ platform.y-=10;}
+        if (keystate[SDL_SCANCODE_T]){ platform.y+=10;}
+
+        player.rect.y += player.velY;
+        player.velY += GRAVITY;
+
+        if (checkCollision(player.rect, ground)) {
+            player.rect.y = ground.y - player.rect.h;
+            player.velY = 0;
+            player.onGround = true;
+        }
+        else if (checkCollision(player.rect, platform) && player.velY >= 0 && player.rect.y <= platform.y + 20) {
+            player.rect.y = platform.y - player.rect.h;
+            player.velY = 0;
+            player.onGround = true;
+        }else if (checkCollision(player.rect, platform2) && player.velY >= 0 && player.rect.y <= platform2.y + 20) {
+            player.rect.y = platform2.y - player.rect.h;
+            player.velY = 0;
+            player.onGround = true;
+        } else {
+            player.onGround = false;
+        }
+
+        cameraX = player.rect.x + player.rect.w / 2 - SCREEN_WIDTH / 2;
+        if (cameraX < 0) cameraX = 0;
+
+        SDL_RenderClear(renderer);
+
+        SDL_RenderCopy(renderer, background, NULL, NULL);
+
+        SDL_Rect groundQuandBouge = ground;
+        groundQuandBouge.x -= (int)cameraX;
+        SDL_RenderCopy(renderer, soltexture, NULL, &groundQuandBouge);
+
+        SDL_Rect platformQuandBouge = platform;
+        platformQuandBouge.x -= (int)cameraX;
+        SDL_RenderCopy(renderer, brick, NULL, &platformQuandBouge);
+
+        SDL_Rect platform2QuandBouge = platform2;
+        platform2QuandBouge.x -= (int)cameraX;
+        SDL_RenderCopy(renderer, brick, NULL, &platform2QuandBouge);
+
+        SDL_Rect playerScreenCentre = player.rect;
+        playerScreenCentre.x -= (int)cameraX;
+        SDL_RenderCopy(renderer, character, NULL, &playerScreenCentre);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(10); // 100 FPS
     }
+
+    SDL_DestroyTexture(background);
+    SDL_DestroyTexture(brick);
+    SDL_DestroyTexture(soltexture);
+    SDL_DestroyTexture(character);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    IMG_Quit();
+    SDL_Quit();
+
     return 0;
 }
