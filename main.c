@@ -106,11 +106,15 @@ void startGame(int level) {
     
     switch (level) {
         case 0:
-            addPlatform(&platforms, 500, 400, 200, 50);
-            addButton(&buttons, 700, SCREEN_HEIGHT - 200, 80, 50, startButton);
-            addButton(&buttons, 400, SCREEN_HEIGHT - 200, 80, 50, exitButton);
+            addPlatform(&platforms, 300, 650, 100, 50);
+            addPlatform(&platforms, 500, 550, 100, 50);
+            addPlatform(&platforms, 700, 450, 100, 50);
+            addPlatform(&platforms, 900, 350, 100, 50);
+            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, exitButton);
+            addButton(&buttons, 950, SCREEN_HEIGHT - 650, 80, 50, startButton);
             break;
         case 1:
+            addButton(&buttons, 400, SCREEN_HEIGHT - 200, 80, 50, exitButton);
             addPlatform(&platforms, 500, 400, 200, 50);
             addPlatform(&platforms, 200, 400, 80, 300);
             addPlatform(&platforms, 300, 300, 100, 100);
@@ -164,6 +168,9 @@ void startGame(int level) {
         for (int i = 0; i < buttons.count; i++) {
             if (checkCollision(player.rect, buttons.array[i].rect)) {
                 if (i != -1) {
+                    if(level==0 && i==0){
+                        exit(0);
+                    }
                     freePlatformList(&platforms);
                     freeButtonList(&buttons);
                     SDL_DestroyTexture(background);

@@ -4,8 +4,8 @@
 #include <SDL.h>
 #include <stdbool.h>
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 1600
+#define SCREEN_HEIGHT 850
 #define GRAVITY 0.5
 #define JUMP_VELOCITY -10
 #define PLAYER_SPEED 5
