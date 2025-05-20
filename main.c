@@ -85,13 +85,74 @@ void freePlatformList(PlatformList* list) {
     list->capacity = 0;
 }
 
+
+typedef struct {
+    SDL_Rect rect;
+    SDL_Texture* texture;
+    int shootTimer;
+} Plant;
+
+typedef struct {
+    SDL_Rect rect;
+    float velX;
+    float velY;
+    SDL_Texture* texture;
+    bool active;
+} Projectile;
+
+
+void updatePlant(Plant* plant, Projectile* projectiles, SDL_Texture* projTexture, Player* player) {
+    plant->shootTimer++;
+    if (plant->shootTimer >= 120) {
+        for (int i = 0; i < 10; i++) {
+            if (!projectiles[i].active) {
+                projectiles[i].active = true;
+                projectiles[i].rect.x = plant->rect.x;
+                projectiles[i].rect.y = plant->rect.y;
+                projectiles[i].rect.w = 20;
+                projectiles[i].rect.h = 20;
+                float dx = player->rect.x - plant->rect.x;
+                float dy = player->rect.y - plant->rect.y;
+                float magnitude = SDL_sqrtf(dx * dx + dy * dy);
+                projectiles[i].velX = (dx / magnitude) * 5;
+                projectiles[i].velY = (dy / magnitude) * 5;
+                projectiles[i].texture = projTexture;
+                break;
+            }
+        }
+        plant->shootTimer = 0;
+    }
+}
+
+void updateProjectiles(Projectile* projectiles) {
+    for (int i = 0; i < 10; i++) {
+        if (projectiles[i].active) {
+            projectiles[i].rect.x += (int)projectiles[i].velX;
+            projectiles[i].rect.y += (int)projectiles[i].velY;
+            if (projectiles[i].rect.x < 0 || projectiles[i].rect.x > SCREEN_WIDTH + 200) {
+                projectiles[i].active = false;
+            }
+        }
+    }
+}
+
+void renderProjectiles(SDL_Renderer* renderer, Projectile* projectiles, float cameraX) {
+    for (int i = 0; i < 10; i++) {
+        if (projectiles[i].active) {
+            SDL_Rect dst = projectiles[i].rect;
+            dst.x -= (int)cameraX;
+            SDL_RenderCopy(renderer, projectiles[i].texture, NULL, &dst);
+        }
+    }
+}
+
 void startGame(int level) {
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
     SDL_Window* window = SDL_CreateWindow("Platformer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    SDL_Texture* brick = IMG_LoadTexture(renderer, "assets/brick.jpg");
+    SDL_Texture* brick = IMG_LoadTexture(renderer, "assets/brick.png");
     SDL_Texture* soltexture = IMG_LoadTexture(renderer, "assets/soltexture.jpg");
     SDL_Texture* character = IMG_LoadTexture(renderer, "assets/droite1.png");
 
@@ -152,12 +213,26 @@ void startGame(int level) {
             addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, exitButton);
             addButton(&buttons, 1800, 320, 80, 50, nextButton);
             break;
+        case 3:
+            addPlatform(&platforms, 300, 650, 100, 50);
+            addPlatform(&platforms, 500, 550, 300, 50);
+            addPlatform(&platforms, 900, 450, 100, 50);
+            addPlatform(&platforms, 1100, 350, 100, 50);
+            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, exitButton);
+            addButton(&buttons, 1800, 320, 80, 50, nextButton);
+            break;
         default:
             printf("level non existant\n");
             return startGame(0);
+            exit(0);
     }
 
     Player player = { .rect = {100, SCREEN_HEIGHT - 200, 25, 50}, .velY = 0, .onGround = false };
+    SDL_Texture* plantTexture = IMG_LoadTexture(renderer, "assets/plant.png");
+    SDL_Texture* projectileTexture = IMG_LoadTexture(renderer, "assets/ball.png");
+
+    Plant plant = { .rect = {550, 500, 50, 50}, .texture = plantTexture, .shootTimer = 0 };
+    Projectile projectiles[10] = {0};
     float cameraX = 0;
     SDL_Event event;
     bool running = true;
@@ -218,6 +293,7 @@ void startGame(int level) {
         }
         if (player.rect.y > 2000){
             return startGame(level);
+            exit(0);
         };
 
 
@@ -259,6 +335,17 @@ void startGame(int level) {
                     }
                 }
                 break;
+            case 3:
+                if(platforms.array[3].x<1600 && gauchePlatform==true){
+                    platforms.array[3].x+=4;
+                }else{
+                    platforms.array[3].x-=4;
+                    gauchePlatform=false;
+                    if(platforms.array[3].x<1100){
+                        gauchePlatform=true;
+                    }
+                }
+                break;
             default:
                 break;
         }
@@ -273,7 +360,7 @@ void startGame(int level) {
             for (int i = 0; i < platforms.count; i++) {
                 SDL_Rect plat = platforms.array[i];
                 if (checkCollision(player.rect, plat) && player.velY >= 0 && player.rect.y <= plat.y - 30) {
-                    if(i==3 && level ==2){
+                    if(i==3 && (level == 2 || level == 3)){
                         if(gauchePlatform==true){
                             player.rect.x+=12;
                         }else{
@@ -307,6 +394,7 @@ void startGame(int level) {
                             IMG_Quit();
                             SDL_Quit();
                             return startGame(0);
+                            exit(0);
                         }
                     }
                     freePlatformList(&platforms);
@@ -320,6 +408,7 @@ void startGame(int level) {
                     IMG_Quit();
                     SDL_Quit();
                     return startGame(level+1);
+                    exit(0);
                 } else {
                     exit(0);
                 }
@@ -341,10 +430,25 @@ void startGame(int level) {
 
         SDL_Rect playerScreen = player.rect;
         playerScreen.x -= (int)cameraX;
+        SDL_Rect plantScreen = plant.rect;
+        plantScreen.x -= (int)cameraX;
+        SDL_RenderCopy(renderer, plant.texture, NULL, &plantScreen);
+        renderProjectiles(renderer, projectiles, cameraX);
         SDL_RenderCopy(renderer, character, NULL, &playerScreen);
 
-        SDL_RenderPresent(renderer);
+        
+        for (int i = 0; i < 10; i++) {
+            if (projectiles[i].active && checkCollision(player.rect, projectiles[i].rect)) {
+                return startGame(level);
+            }
+        }
+        if (checkCollision(player.rect, plant.rect)) {
+            return startGame(level);
+        }
+SDL_RenderPresent(renderer);
 
+        updatePlant(&plant, projectiles, projectileTexture, &player);
+        updateProjectiles(projectiles);
         // if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_RIGHT]){
         //     SDL_Delay(10);
         // }
@@ -366,5 +470,5 @@ void startGame(int level) {
 }
 
 int main() {
-    startGame(0);
+    startGame(3);
 }
