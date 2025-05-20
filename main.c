@@ -158,13 +158,18 @@ void startGame(int level) {
 
     SDL_Texture* startButton = IMG_LoadTexture(renderer, "assets/startButton.png");
     SDL_Texture* nextButton = IMG_LoadTexture(renderer, "assets/nextButton.png");
-    SDL_Texture* exitButton = IMG_LoadTexture(renderer, "assets/exitButton.png");
     SDL_Texture* backButton = IMG_LoadTexture(renderer, "assets/backButton.png");
+    SDL_Texture* exitButton = IMG_LoadTexture(renderer, "assets/exitButton.png");
+
+    SDL_Texture* plantTexture = IMG_LoadTexture(renderer, "assets/plant.png");
+    SDL_Texture* projectileTexture = IMG_LoadTexture(renderer, "assets/ball.png");
 
     PlatformList platforms;
     initPlatformList(&platforms);
     ButtonList buttons;
     initButtonList(&buttons);
+
+    Plant plant;
     
     switch (level) {
         case 0:
@@ -215,6 +220,9 @@ void startGame(int level) {
             addButton(&buttons, 1800, 320, 80, 50, nextButton);
             break;
         case 3:
+            plant.rect = (SDL_Rect){550, 500, 50, 50};
+            plant.texture = plantTexture;
+            plant.shootTimer = 0;
             addPlatform(&platforms, 300, 650, 100, 50);
             addPlatform(&platforms, 500, 550, 300, 50);
             addPlatform(&platforms, 900, 450, 100, 50);
@@ -229,10 +237,7 @@ void startGame(int level) {
     }
 
     Player player = { .rect = {100, SCREEN_HEIGHT - 200, 25, 50}, .velY = 0, .onGround = false };
-    SDL_Texture* plantTexture = IMG_LoadTexture(renderer, "assets/plant.png");
-    SDL_Texture* projectileTexture = IMG_LoadTexture(renderer, "assets/ball.png");
-
-    Plant plant = { .rect = {550, 500, 50, 50}, .texture = plantTexture, .shootTimer = 0 };
+    
     Projectile projectiles[10] = {0};
     float cameraX = 0;
     SDL_Event event;
@@ -249,6 +254,8 @@ void startGame(int level) {
 
     strcpy(pathimg, "assets/bg1.png");
     SDL_Texture* background = IMG_LoadTexture(renderer, pathimg);
+
+    SDL_Rect plantScreen;
 
     while (running) {
         loop1000+=1;
@@ -381,22 +388,21 @@ void startGame(int level) {
             if (checkCollision(player.rect, buttons.array[i].rect)) {
                 if (i != -1) {
                     if(buttons.array[i].texture==exitButton){
-                        exit(0);
-                    }
-                    if(buttons.array[i].texture==backButton){
-                        freePlatformList(&platforms);
-                        freeButtonList(&buttons);
-                        SDL_DestroyTexture(background);
-                        SDL_DestroyTexture(brick);
-                        SDL_DestroyTexture(soltexture);
-                        SDL_DestroyTexture(character);
-                        SDL_DestroyRenderer(renderer);
-                        SDL_DestroyWindow(window);
-                        IMG_Quit();
-                        SDL_Quit();
-                        return startGame(0);
-                        exit(0);
-                    }
+                            exit(0);
+                    }else if(buttons.array[i].texture==backButton){
+                            freePlatformList(&platforms);
+                            freeButtonList(&buttons);
+                            SDL_DestroyTexture(background);
+                            SDL_DestroyTexture(brick);
+                            SDL_DestroyTexture(soltexture);
+                            SDL_DestroyTexture(character);
+                            SDL_DestroyRenderer(renderer);
+                            SDL_DestroyWindow(window);
+                            IMG_Quit();
+                            SDL_Quit();
+                            return startGame(0);
+                            exit(0);
+                        }
                     freePlatformList(&platforms);
                     freeButtonList(&buttons);
                     SDL_DestroyTexture(background);
@@ -430,9 +436,17 @@ void startGame(int level) {
 
         SDL_Rect playerScreen = player.rect;
         playerScreen.x -= (int)cameraX;
-        SDL_Rect plantScreen = plant.rect;
-        plantScreen.x -= (int)cameraX;
-        SDL_RenderCopy(renderer, plant.texture, NULL, &plantScreen);
+
+        if(level==3){
+                plantScreen = plant.rect;
+                plantScreen.x -= (int)cameraX;
+                SDL_RenderCopy(renderer, plant.texture, NULL, &plantScreen);
+                if (checkCollision(player.rect, plant.rect)) {
+                    return startGame(level);
+                }
+                updatePlant(&plant, projectiles, projectileTexture, &player);
+        }
+        
         renderProjectiles(renderer, projectiles, cameraX);
         SDL_RenderCopy(renderer, character, NULL, &playerScreen);
 
@@ -442,12 +456,9 @@ void startGame(int level) {
                 return startGame(level);
             }
         }
-        if (checkCollision(player.rect, plant.rect)) {
-            return startGame(level);
-        }
-SDL_RenderPresent(renderer);
+        SDL_RenderPresent(renderer);
 
-        updatePlant(&plant, projectiles, projectileTexture, &player);
+        
         updateProjectiles(projectiles);
         // if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_RIGHT]){
         //     SDL_Delay(10);
@@ -470,5 +481,5 @@ SDL_RenderPresent(renderer);
 }
 
 int main() {
-    startGame(3);
+    startGame(0);
 }
