@@ -93,7 +93,7 @@ void startGame(int level) {
 
     SDL_Texture* brick = IMG_LoadTexture(renderer, "assets/brick.jpg");
     SDL_Texture* soltexture = IMG_LoadTexture(renderer, "assets/soltexture.jpg");
-    SDL_Texture* character = IMG_LoadTexture(renderer, "assets/personnage_d.png");
+    SDL_Texture* character = IMG_LoadTexture(renderer, "assets/droite1.png");
 
     SDL_Texture* startButton = IMG_LoadTexture(renderer, "assets/startButton.png");
     SDL_Texture* nextButton = IMG_LoadTexture(renderer, "assets/nextButton.png");
@@ -142,7 +142,7 @@ void startGame(int level) {
 
             addPlatform(&platforms, 1600, 500, 80, 50);
 
-            addButton(&buttons, 2000, 500, 80, 50, nextButton);
+            addButton(&buttons, 2100, 500, 80, 50, nextButton);
             break;
         case 2:
             addPlatform(&platforms, 300, 650, 100, 50);
@@ -154,7 +154,7 @@ void startGame(int level) {
             break;
         default:
             printf("level non existant\n");
-            return;
+            return startGame(0);
     }
 
     Player player = { .rect = {100, SCREEN_HEIGHT - 200, 25, 50}, .velY = 0, .onGround = false };
