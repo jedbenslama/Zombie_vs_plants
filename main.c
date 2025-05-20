@@ -183,10 +183,6 @@ void startGame(int level) {
                 character = IMG_LoadTexture(renderer, pathbg);
             }
 
-            
-
-            printf("%s\n",pathbg);
-
             loop10=0;
         }
         if (player.rect.y > 2000) exit(123);
