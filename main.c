@@ -159,6 +159,7 @@ void startGame(int level) {
     SDL_Texture* startButton = IMG_LoadTexture(renderer, "assets/startButton.png");
     SDL_Texture* nextButton = IMG_LoadTexture(renderer, "assets/nextButton.png");
     SDL_Texture* exitButton = IMG_LoadTexture(renderer, "assets/exitButton.png");
+    SDL_Texture* backButton = IMG_LoadTexture(renderer, "assets/backButton.png");
 
     PlatformList platforms;
     initPlatformList(&platforms);
@@ -175,7 +176,7 @@ void startGame(int level) {
             addButton(&buttons, 950, SCREEN_HEIGHT - 650, 80, 50, startButton);
             break;
         case 1:
-            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, exitButton);
+            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, backButton);
             addPlatform(&platforms, 200, 650, 80, 50);
             addPlatform(&platforms, 400, 600, 80, 50);
             addPlatform(&platforms, 600, 600, 80, 50);
@@ -210,7 +211,7 @@ void startGame(int level) {
             addPlatform(&platforms, 500, 550, 100, 50);
             addPlatform(&platforms, 700, 450, 100, 50);
             addPlatform(&platforms, 900, 350, 100, 50);
-            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, exitButton);
+            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, backButton);
             addButton(&buttons, 1800, 320, 80, 50, nextButton);
             break;
         case 3:
@@ -218,7 +219,7 @@ void startGame(int level) {
             addPlatform(&platforms, 500, 550, 300, 50);
             addPlatform(&platforms, 900, 450, 100, 50);
             addPlatform(&platforms, 1100, 350, 100, 50);
-            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, exitButton);
+            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, backButton);
             addButton(&buttons, 1800, 320, 80, 50, nextButton);
             break;
         default:
@@ -380,22 +381,21 @@ void startGame(int level) {
             if (checkCollision(player.rect, buttons.array[i].rect)) {
                 if (i != -1) {
                     if(buttons.array[i].texture==exitButton){
-                        if(level==0){
-                            exit(0);
-                        }else{
-                            freePlatformList(&platforms);
-                            freeButtonList(&buttons);
-                            SDL_DestroyTexture(background);
-                            SDL_DestroyTexture(brick);
-                            SDL_DestroyTexture(soltexture);
-                            SDL_DestroyTexture(character);
-                            SDL_DestroyRenderer(renderer);
-                            SDL_DestroyWindow(window);
-                            IMG_Quit();
-                            SDL_Quit();
-                            return startGame(0);
-                            exit(0);
-                        }
+                        exit(0);
+                    }
+                    if(buttons.array[i].texture==backButton){
+                        freePlatformList(&platforms);
+                        freeButtonList(&buttons);
+                        SDL_DestroyTexture(background);
+                        SDL_DestroyTexture(brick);
+                        SDL_DestroyTexture(soltexture);
+                        SDL_DestroyTexture(character);
+                        SDL_DestroyRenderer(renderer);
+                        SDL_DestroyWindow(window);
+                        IMG_Quit();
+                        SDL_Quit();
+                        return startGame(0);
+                        exit(0);
                     }
                     freePlatformList(&platforms);
                     freeButtonList(&buttons);
