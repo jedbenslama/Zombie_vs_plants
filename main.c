@@ -91,12 +91,12 @@ void startGame(int level) {
     SDL_Window* window = SDL_CreateWindow("Platformer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    SDL_Texture* background = IMG_LoadTexture(renderer, "assets/background.jpg");
     SDL_Texture* brick = IMG_LoadTexture(renderer, "assets/brick.jpg");
     SDL_Texture* soltexture = IMG_LoadTexture(renderer, "assets/soltexture.jpg");
     SDL_Texture* character = IMG_LoadTexture(renderer, "assets/personnage_d.png");
 
     SDL_Texture* startButton = IMG_LoadTexture(renderer, "assets/startButton.png");
+    SDL_Texture* nextButton = IMG_LoadTexture(renderer, "assets/nextButton.png");
     SDL_Texture* exitButton = IMG_LoadTexture(renderer, "assets/exitButton.png");
 
     PlatformList platforms;
@@ -118,9 +118,15 @@ void startGame(int level) {
             addPlatform(&platforms, 500, 400, 200, 50);
             addPlatform(&platforms, 200, 400, 80, 300);
             addPlatform(&platforms, 300, 300, 100, 100);
+            addButton(&buttons, 950, SCREEN_HEIGHT - 250, 80, 50, nextButton);
+            break;
+        case 2:
+            addButton(&buttons, 400, SCREEN_HEIGHT - 200, 80, 50, exitButton);
+            addButton(&buttons, 950, SCREEN_HEIGHT - 250, 80, 50, nextButton);
+            addPlatform(&platforms, 500, 400, 200, 50);
             break;
         default:
-            printf("level non existant");
+            printf("level non existant\n");
             return;
     }
 
@@ -129,8 +135,63 @@ void startGame(int level) {
     SDL_Event event;
     bool running = true;
 
+    bool gauchePlatform = false;
+    int loop1000 = 0;
+    int loop10 = 0;
+    int currbg = 0;
+    char pathbg[100];
+    char num[10];
+    int currperso = 0;
+    bool droite = true;
+
+    strcpy(pathbg, "assets/bg1.png");
+    SDL_Texture* background = IMG_LoadTexture(renderer, pathbg);
+
     while (running) {
+        loop1000+=1;
+        if(loop1000==1000){
+            loop1000=0;
+        }
+        loop10+=1;
+        if(loop10==10){
+            currbg+=1;
+            if(currbg>8){
+                currbg=1;
+            }
+            currperso+=1;
+            if(currperso>4){
+                currperso=1;
+            }
+            SDL_itoa(currbg, num, 10);
+            strcpy(pathbg, "assets/bg");
+            strcat(pathbg, num);
+            strcat(pathbg, ".png");
+            background = IMG_LoadTexture(renderer, pathbg);
+
+            SDL_itoa(currperso, num, 10);
+            
+            if(droite){
+                strcpy(pathbg, "assets/droite");
+                strcat(pathbg, num);
+                strcat(pathbg, ".png");
+                character = IMG_LoadTexture(renderer, pathbg);
+            }
+            else{
+                strcpy(pathbg, "assets/gauche");
+                strcat(pathbg, num);
+                strcat(pathbg, ".png");
+                character = IMG_LoadTexture(renderer, pathbg);
+            }
+
+            
+
+            printf("%s\n",pathbg);
+
+            loop10=0;
+        }
         if (player.rect.y > 2000) exit(123);
+
+
 
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
@@ -138,8 +199,12 @@ void startGame(int level) {
         }
 
         const Uint8* keystate = SDL_GetKeyboardState(NULL);
-        if (keystate[SDL_SCANCODE_LEFT]) { player.rect.x -= PLAYER_SPEED; character = IMG_LoadTexture(renderer, "assets/personnage_g.png"); }
-        if (keystate[SDL_SCANCODE_RIGHT]) { player.rect.x += PLAYER_SPEED; character = IMG_LoadTexture(renderer, "assets/personnage_d.png"); }
+        if (keystate[SDL_SCANCODE_LEFT]){
+            player.rect.x -= PLAYER_SPEED; droite=false;
+        }
+        if (keystate[SDL_SCANCODE_RIGHT]){
+            player.rect.x += PLAYER_SPEED; droite=true;
+        }
         if ((keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_UP]) && player.onGround) {
             player.velY = JUMP_VELOCITY;
             player.onGround = false;
@@ -165,11 +230,41 @@ void startGame(int level) {
             }
         }
 
+        switch (level) {
+            case 2:
+                if(platforms.array[0].x<100 && gauchePlatform==true){
+                    platforms.array[0].x+=1;
+                }else{
+                    platforms.array[0].x-=1;
+                    gauchePlatform=false;
+                    if(platforms.array[0].x<50){
+                        gauchePlatform=true;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
         for (int i = 0; i < buttons.count; i++) {
             if (checkCollision(player.rect, buttons.array[i].rect)) {
                 if (i != -1) {
-                    if(level==0 && i==0){
-                        exit(0);
+                    if(buttons.array[i].texture==exitButton){
+                        if(level==0){
+                            exit(0);
+                        }else{
+                            freePlatformList(&platforms);
+                            freeButtonList(&buttons);
+                            SDL_DestroyTexture(background);
+                            SDL_DestroyTexture(brick);
+                            SDL_DestroyTexture(soltexture);
+                            SDL_DestroyTexture(character);
+                            SDL_DestroyRenderer(renderer);
+                            SDL_DestroyWindow(window);
+                            IMG_Quit();
+                            SDL_Quit();
+                            return startGame(0);
+                        }
                     }
                     freePlatformList(&platforms);
                     freeButtonList(&buttons);
@@ -181,8 +276,7 @@ void startGame(int level) {
                     SDL_DestroyWindow(window);
                     IMG_Quit();
                     SDL_Quit();
-                    startGame(i);
-                    return;
+                    return startGame(level+1);
                 } else {
                     exit(0);
                 }
@@ -207,7 +301,13 @@ void startGame(int level) {
         SDL_RenderCopy(renderer, character, NULL, &playerScreen);
 
         SDL_RenderPresent(renderer);
-        SDL_Delay(10);
+
+        if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_RIGHT]){
+            SDL_Delay(10);
+        }
+        else{
+            SDL_Delay(13);
+        }
     }
 
     freePlatformList(&platforms);
