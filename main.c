@@ -6,9 +6,14 @@
 
 typedef struct {
     SDL_Rect rect;
-    float velY;
-    bool onGround;
-} Player;
+    SDL_Texture* texture;
+} Button;
+
+typedef struct {
+    Button* array;
+    int count;
+    int capacity;
+} ButtonList;
 
 typedef struct {
     SDL_Rect* array;
@@ -17,30 +22,30 @@ typedef struct {
 } PlatformList;
 
 typedef struct {
-    SDL_Rect* array;
-    int count;
-    int capacity;
-} ButtonList;
+    SDL_Rect rect;
+    float velY;
+    bool onGround;
+} Player;
 
 void initButtonList(ButtonList* list) {
     list->count = 0;
     list->capacity = 2;
-    list->array = malloc(sizeof(SDL_Rect) * list->capacity);
+    list->array = malloc(sizeof(Button) * list->capacity);
 }
 
-void addButton(ButtonList* list, int x, int y, int w, int h) {
+void addButton(ButtonList* list, int x, int y, int w, int h, SDL_Texture* texture) {
     if (list->count >= list->capacity) {
         list->capacity *= 2;
-        list->array = realloc(list->array, sizeof(SDL_Rect) * list->capacity);
+        list->array = realloc(list->array, sizeof(Button) * list->capacity);
     }
-    list->array[list->count++] = (SDL_Rect){ x, y, w, h };
+    list->array[list->count++] = (Button){ .rect = { x, y, w, h }, .texture = texture };
 }
 
-void renderButtons(SDL_Renderer* renderer, SDL_Texture* texture, ButtonList* list, float cameraX) {
+void renderButtons(SDL_Renderer* renderer, ButtonList* list, float cameraX) {
     for (int i = 0; i < list->count; i++) {
-        SDL_Rect dst = list->array[i];
+        SDL_Rect dst = list->array[i].rect;
         dst.x -= (int)cameraX;
-        SDL_RenderCopy(renderer, texture, NULL, &dst);
+        SDL_RenderCopy(renderer, list->array[i].texture, NULL, &dst);
     }
 }
 
@@ -80,7 +85,7 @@ void freePlatformList(PlatformList* list) {
     list->capacity = 0;
 }
 
-void startGame() {
+void startGame(int level) {
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
     SDL_Window* window = SDL_CreateWindow("Platformer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
@@ -90,19 +95,30 @@ void startGame() {
     SDL_Texture* brick = IMG_LoadTexture(renderer, "assets/brick.jpg");
     SDL_Texture* soltexture = IMG_LoadTexture(renderer, "assets/soltexture.jpg");
     SDL_Texture* character = IMG_LoadTexture(renderer, "assets/personnage_d.png");
-    SDL_Texture* startButton = IMG_LoadTexture(renderer, "assets/startButton.png");
 
+    SDL_Texture* startButton = IMG_LoadTexture(renderer, "assets/startButton.png");
+    SDL_Texture* exitButton = IMG_LoadTexture(renderer, "assets/exitButton.png");
 
     PlatformList platforms;
     initPlatformList(&platforms);
-    addPlatform(&platforms, 500, 400, 200, 50);
-    addPlatform(&platforms, 200, 400, 80, 300);
-    addPlatform(&platforms, 300, 300, 100, 100);
-
     ButtonList buttons;
     initButtonList(&buttons);
-    addButton(&buttons, 700, SCREEN_HEIGHT - 200, 80, 50); // bouton cliquable
-
+    
+    switch (level) {
+        case 0:
+            addPlatform(&platforms, 500, 400, 200, 50);
+            addButton(&buttons, 700, SCREEN_HEIGHT - 200, 80, 50, startButton);
+            addButton(&buttons, 100, SCREEN_HEIGHT - 200, 80, 50, exitButton);
+            break;
+        case 1:
+            addPlatform(&platforms, 500, 400, 200, 50);
+            addPlatform(&platforms, 200, 400, 80, 300);
+            addPlatform(&platforms, 300, 300, 100, 100);
+            break;
+        default:
+            printf("level non existant");
+            return;
+    }
 
     Player player = { .rect = {100, SCREEN_HEIGHT - 200, 50, 50}, .velY = 0, .onGround = false };
     float cameraX = 0;
@@ -133,10 +149,10 @@ void startGame() {
             player.velY = 0;
             player.onGround = true;
         } else {
-            player.onGround = false; // faudra ptt enlever ca
+            player.onGround = false;
             for (int i = 0; i < platforms.count; i++) {
                 SDL_Rect plat = platforms.array[i];
-                if (checkCollision(player.rect, plat) && player.velY >= 0 && player.rect.y <= plat.y -30) {
+                if (checkCollision(player.rect, plat) && player.velY >= 0 && player.rect.y <= plat.y - 30) {
                     player.rect.y = plat.y - player.rect.h;
                     player.velY = 0;
                     player.onGround = true;
@@ -146,10 +162,10 @@ void startGame() {
         }
 
         for (int i = 0; i < buttons.count; i++) {
-            if (checkCollision(player.rect, buttons.array[i])) {
-
+            if (checkCollision(player.rect, buttons.array[i].rect)) {
                 if (i == 0) {
                     freePlatformList(&platforms);
+                    freeButtonList(&buttons);
                     SDL_DestroyTexture(background);
                     SDL_DestroyTexture(brick);
                     SDL_DestroyTexture(soltexture);
@@ -158,13 +174,13 @@ void startGame() {
                     SDL_DestroyWindow(window);
                     IMG_Quit();
                     SDL_Quit();
-
-
-                    startGame();
+                    startGame(1);
                     return;
+                } else if (i == 1) {
+                    exit(0);
                 }
             }
-        }        
+        }
 
         cameraX = player.rect.x + player.rect.w / 2 - SCREEN_WIDTH / 2;
         if (cameraX < 0) cameraX = 0;
@@ -177,7 +193,7 @@ void startGame() {
         SDL_RenderCopy(renderer, soltexture, NULL, &groundMoved);
 
         renderPlatforms(renderer, brick, &platforms, cameraX);
-        renderButtons(renderer, startButton, &buttons, cameraX);
+        renderButtons(renderer, &buttons, cameraX);
 
         SDL_Rect playerScreen = player.rect;
         playerScreen.x -= (int)cameraX;
@@ -188,6 +204,7 @@ void startGame() {
     }
 
     freePlatformList(&platforms);
+    freeButtonList(&buttons);
     SDL_DestroyTexture(background);
     SDL_DestroyTexture(brick);
     SDL_DestroyTexture(soltexture);
@@ -199,5 +216,5 @@ void startGame() {
 }
 
 int main() {
-    startGame();
+    startGame(0);
 }
