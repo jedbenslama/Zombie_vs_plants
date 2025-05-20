@@ -216,7 +216,9 @@ void startGame(int level) {
 
             loop10=0;
         }
-        if (player.rect.y > 2000) exit(123);
+        if (player.rect.y > 2000){
+            return startGame(level);
+        };
 
 
 
