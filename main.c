@@ -233,7 +233,7 @@ void startGame(int level) {
         default:
             printf("level non existant\n");
             return startGame(0);
-            exit(0);
+            return;
     }
 
     Player player = { .rect = {100, SCREEN_HEIGHT - 200, 25, 50}, .velY = 0, .onGround = false };
@@ -301,7 +301,7 @@ void startGame(int level) {
         }
         if (player.rect.y > 2000){
             return startGame(level);
-            exit(0);
+            return;
         };
 
 
@@ -388,7 +388,7 @@ void startGame(int level) {
             if (checkCollision(player.rect, buttons.array[i].rect)) {
                 if (i != -1) {
                     if(buttons.array[i].texture==exitButton){
-                            exit(0);
+                            return;
                     }else if(buttons.array[i].texture==backButton){
                             freePlatformList(&platforms);
                             freeButtonList(&buttons);
@@ -401,7 +401,7 @@ void startGame(int level) {
                             IMG_Quit();
                             SDL_Quit();
                             return startGame(0);
-                            exit(0);
+                            return;
                         }
                     freePlatformList(&platforms);
                     freeButtonList(&buttons);
@@ -414,9 +414,9 @@ void startGame(int level) {
                     IMG_Quit();
                     SDL_Quit();
                     return startGame(level+1);
-                    exit(0);
+                    return;
                 } else {
-                    exit(0);
+                    return;
                 }
             }
         }
