@@ -114,23 +114,50 @@ void startGame(int level) {
             addButton(&buttons, 950, SCREEN_HEIGHT - 650, 80, 50, startButton);
             break;
         case 1:
-            addButton(&buttons, 400, SCREEN_HEIGHT - 200, 80, 50, exitButton);
-            addPlatform(&platforms, 500, 400, 200, 50);
-            addPlatform(&platforms, 200, 400, 80, 300);
-            addPlatform(&platforms, 300, 300, 100, 100);
-            addButton(&buttons, 950, SCREEN_HEIGHT - 250, 80, 50, nextButton);
+            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, exitButton);
+            addPlatform(&platforms, 200, 650, 80, 50);
+            addPlatform(&platforms, 400, 600, 80, 50);
+            addPlatform(&platforms, 600, 600, 80, 50);
+            addPlatform(&platforms, 800, 600, 80, 50);
+            addPlatform(&platforms, 1000, 600, 80, 50);
+            addPlatform(&platforms, 1200, 600, 80, 50);
+            addPlatform(&platforms, 1400, 600, 80, 50);
+
+            addPlatform(&platforms, 600, 430, 80, 50);
+            addPlatform(&platforms, 800, 430, 80, 50);
+            addPlatform(&platforms, 1000, 430, 80, 50);
+            addPlatform(&platforms, 1200, 430, 80, 50);
+            addPlatform(&platforms, 1400, 430, 80, 50);
+            addPlatform(&platforms, 1600, 500, 80, 50);
+
+            addPlatform(&platforms, 400, 330, 80, 50);
+            addPlatform(&platforms, 400, 230, 80, 50);
+
+            addPlatform(&platforms, 600, 130, 80, 50);
+            addPlatform(&platforms, 800, 130, 80, 50);
+            addPlatform(&platforms, 1000, 130, 80, 50);
+            addPlatform(&platforms, 1200, 130, 80, 50);
+            addPlatform(&platforms, 1400, 130, 80, 50);
+            addPlatform(&platforms, 1600, 130, 80, 50);
+
+            addPlatform(&platforms, 1600, 500, 80, 50);
+
+            addButton(&buttons, 2000, 500, 80, 50, nextButton);
             break;
         case 2:
-            addButton(&buttons, 400, SCREEN_HEIGHT - 200, 80, 50, exitButton);
-            addButton(&buttons, 950, SCREEN_HEIGHT - 250, 80, 50, nextButton);
-            addPlatform(&platforms, 500, 400, 200, 50);
+            addPlatform(&platforms, 300, 650, 100, 50);
+            addPlatform(&platforms, 500, 550, 100, 50);
+            addPlatform(&platforms, 700, 450, 100, 50);
+            addPlatform(&platforms, 900, 350, 100, 50);
+            addButton(&buttons, 100, SCREEN_HEIGHT - 300, 80, 50, exitButton);
+            addButton(&buttons, 1800, 320, 80, 50, nextButton);
             break;
         default:
             printf("level non existant\n");
             return;
     }
 
-    Player player = { .rect = {100, SCREEN_HEIGHT - 200, 50, 50}, .velY = 0, .onGround = false };
+    Player player = { .rect = {100, SCREEN_HEIGHT - 200, 25, 50}, .velY = 0, .onGround = false };
     float cameraX = 0;
     SDL_Event event;
     bool running = true;
@@ -209,6 +236,27 @@ void startGame(int level) {
         player.rect.y += player.velY;
         player.velY += GRAVITY;
 
+        if (keystate[SDL_SCANCODE_J]){
+            player.rect.x=platforms.array[3].x+30;
+            player.rect.y=platforms.array[3].y-30;
+        }
+
+        switch (level) {
+            case 2:
+                if(platforms.array[3].x<1600 && gauchePlatform==true){
+                    platforms.array[3].x+=4;
+                }else{
+                    platforms.array[3].x-=4;
+                    gauchePlatform=false;
+                    if(platforms.array[3].x<900){
+                        gauchePlatform=true;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
         if (checkCollision(player.rect, ground)) {
             player.rect.y = ground.y - player.rect.h;
             player.velY = 0;
@@ -218,28 +266,20 @@ void startGame(int level) {
             for (int i = 0; i < platforms.count; i++) {
                 SDL_Rect plat = platforms.array[i];
                 if (checkCollision(player.rect, plat) && player.velY >= 0 && player.rect.y <= plat.y - 30) {
+                    if(i==3 && level ==2){
+                        if(gauchePlatform==true){
+                            player.rect.x+=12;
+                        }else{
+                            player.rect.x-=12;
+                        }
+                    }
+
                     player.rect.y = plat.y - player.rect.h;
                     player.velY = 0;
                     player.onGround = true;
                     break;
                 }
             }
-        }
-
-        switch (level) {
-            case 2:
-                if(platforms.array[0].x<100 && gauchePlatform==true){
-                    platforms.array[0].x+=1;
-                }else{
-                    platforms.array[0].x-=1;
-                    gauchePlatform=false;
-                    if(platforms.array[0].x<50){
-                        gauchePlatform=true;
-                    }
-                }
-                break;
-            default:
-                break;
         }
 
         for (int i = 0; i < buttons.count; i++) {
@@ -298,12 +338,12 @@ void startGame(int level) {
 
         SDL_RenderPresent(renderer);
 
-        if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_RIGHT]){
-            SDL_Delay(10);
-        }
-        else{
+        // if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_RIGHT]){
+        //     SDL_Delay(10);
+        // }
+        // else{
             SDL_Delay(13);
-        }
+        // }
     }
 
     freePlatformList(&platforms);
@@ -319,5 +359,5 @@ void startGame(int level) {
 }
 
 int main() {
-    startGame(0);
+    startGame(2);
 }
