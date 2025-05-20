@@ -166,13 +166,13 @@ void startGame(int level) {
     int loop1000 = 0;
     int loop10 = 0;
     int currbg = 0;
-    char pathbg[100];
+    char pathimg[100];
     char num[10];
     int currperso = 0;
     bool droite = true;
 
-    strcpy(pathbg, "assets/bg1.png");
-    SDL_Texture* background = IMG_LoadTexture(renderer, pathbg);
+    strcpy(pathimg, "assets/bg1.png");
+    SDL_Texture* background = IMG_LoadTexture(renderer, pathimg);
 
     while (running) {
         loop1000+=1;
@@ -190,24 +190,28 @@ void startGame(int level) {
                 currperso=1;
             }
             SDL_itoa(currbg, num, 10);
-            strcpy(pathbg, "assets/bg");
-            strcat(pathbg, num);
-            strcat(pathbg, ".png");
-            background = IMG_LoadTexture(renderer, pathbg);
+            strcpy(pathimg, "assets/bg");
+            strcat(pathimg, num);
+            strcat(pathimg, ".png");
+            background = IMG_LoadTexture(renderer, pathimg);
 
-            SDL_itoa(currperso, num, 10);
+            if(player.onGround==false){
+                SDL_itoa(1, num, 10);
+            }else{
+                SDL_itoa(currperso, num, 10);
+            }
             
             if(droite){
-                strcpy(pathbg, "assets/droite");
-                strcat(pathbg, num);
-                strcat(pathbg, ".png");
-                character = IMG_LoadTexture(renderer, pathbg);
+                strcpy(pathimg, "assets/droite");
+                strcat(pathimg, num);
+                strcat(pathimg, ".png");
+                character = IMG_LoadTexture(renderer, pathimg);
             }
             else{
-                strcpy(pathbg, "assets/gauche");
-                strcat(pathbg, num);
-                strcat(pathbg, ".png");
-                character = IMG_LoadTexture(renderer, pathbg);
+                strcpy(pathimg, "assets/gauche");
+                strcat(pathimg, num);
+                strcat(pathimg, ".png");
+                character = IMG_LoadTexture(renderer, pathimg);
             }
 
             loop10=0;
@@ -262,7 +266,8 @@ void startGame(int level) {
             player.velY = 0;
             player.onGround = true;
         } else {
-            player.onGround = false;
+            // player.onGround = false;
+            // mecanique du coyote time
             for (int i = 0; i < platforms.count; i++) {
                 SDL_Rect plat = platforms.array[i];
                 if (checkCollision(player.rect, plat) && player.velY >= 0 && player.rect.y <= plat.y - 30) {
