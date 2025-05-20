@@ -481,5 +481,5 @@ void startGame(int level) {
 }
 
 int main() {
-    startGame(0);
+    startGame(3);
 }
