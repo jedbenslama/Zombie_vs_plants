@@ -108,7 +108,7 @@ void startGame(int level) {
         case 0:
             addPlatform(&platforms, 500, 400, 200, 50);
             addButton(&buttons, 700, SCREEN_HEIGHT - 200, 80, 50, startButton);
-            addButton(&buttons, 100, SCREEN_HEIGHT - 200, 80, 50, exitButton);
+            addButton(&buttons, 400, SCREEN_HEIGHT - 200, 80, 50, exitButton);
             break;
         case 1:
             addPlatform(&platforms, 500, 400, 200, 50);
@@ -163,7 +163,7 @@ void startGame(int level) {
 
         for (int i = 0; i < buttons.count; i++) {
             if (checkCollision(player.rect, buttons.array[i].rect)) {
-                if (i == 0) {
+                if (i != -1) {
                     freePlatformList(&platforms);
                     freeButtonList(&buttons);
                     SDL_DestroyTexture(background);
@@ -174,9 +174,9 @@ void startGame(int level) {
                     SDL_DestroyWindow(window);
                     IMG_Quit();
                     SDL_Quit();
-                    startGame(1);
+                    startGame(i);
                     return;
-                } else if (i == 1) {
+                } else {
                     exit(0);
                 }
             }
