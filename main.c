@@ -359,5 +359,5 @@ void startGame(int level) {
 }
 
 int main() {
-    startGame(2);
+    startGame(0);
 }
